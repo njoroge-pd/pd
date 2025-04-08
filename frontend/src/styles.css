@@ -1,0 +1,28 @@
+/* React-specific additions */
+.auth-links {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .result-section {
+    background-color: #f5f5f5;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+  
+  .result-section h3 {
+    color: #00274d;
+    margin-bottom: 10px;
+  }
+  
+  .result-section li {
+    list-style: none;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+  }
