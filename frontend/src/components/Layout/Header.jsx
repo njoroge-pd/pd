@@ -1,12 +1,21 @@
 "use client"
-import { Link, useNavigate } from "react-router-dom"
+import { Link, useNavigate, useLocation } from "react-router-dom"
+import { useEffect, useState } from "react"
 
 const Header = () => {
   const navigate = useNavigate()
-  const isLoggedIn = localStorage.getItem("token")
+  const location = useLocation()
+
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+  useEffect(() => {
+    const token = localStorage.getItem("token")
+    setIsLoggedIn(!!token)
+  }, [location]) // run on route change
 
   const handleLogout = () => {
     localStorage.removeItem("token")
+    setIsLoggedIn(false)
     navigate("/")
   }
 
