@@ -37,6 +37,7 @@ router.get("/me", auth, async (req, res) => {
 
 // Register endpoint updates
 router.post("/register", async (req, res) => {
+
   const {
     email,
     admissionNumber,
@@ -46,7 +47,7 @@ router.post("/register", async (req, res) => {
     password,
     confirmPassword,
   } = req.body;
-
+  console.log("Clicked register:", req.body);
   // Validate inputs
   if (!email || !admissionNumber || !name || !course || !phone || !password) {
     return res.status(400).json({ message: "All fields are required" });
@@ -105,6 +106,7 @@ router.post("/register", async (req, res) => {
 // Bulk register endpoint
 router.post("/registerBulk", async (req, res) => {
   const students = req.body; // expect an array
+  
 
   if (!Array.isArray(students) || students.length === 0) {
     return res.status(400).json({ message: "Provide an array of students" });
