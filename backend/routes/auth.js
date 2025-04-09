@@ -87,11 +87,11 @@ router.post("/register", async (req, res) => {
     await voter.save();
 
     // Send confirmation email
-    await sendEmail({
-      to: email,
-      subject: "Registration Successful",
-      html: `<p>Welcome ${name}! Your MMU voting account has been created.</p>`,
-    });
+    // await sendEmail({
+    //   to: email,
+    //   subject: "Registration Successful",
+    //   html: `<p>Welcome ${name}! Your MMU voting account has been created.</p>`,
+    // });
 
     res.status(201).json({ message: "Registration successful" });
   } catch (err) {
