@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom"
 import axios from "axios"
 import Header from "../Layout/Header"
 import MainContainer from "../Layout/MainContainer"
+import { authAPI } from "../../services/api"
+
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -42,7 +44,7 @@ const Register = () => {
     }
 
     try {
-      const response = await axios.post("/api/auth/register", formData)
+      const response = await authAPI.register(formData)
       setSuccess(response.data.message || "Registration successful")
 
       // Redirect to login after a delay
