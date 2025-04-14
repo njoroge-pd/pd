@@ -15,10 +15,10 @@ const VotingSection = () => {
     financeSecretary: "",
   })
   const [candidates, setCandidates] = useState({
-    president: ["Candidate 1", "Candidate 2", "Candidate 3"],
-    vicePresident: ["Candidate A", "Candidate B", "Candidate C"],
-    secretaryGeneral: ["Candidate X", "Candidate Y", "Candidate Z"],
-    financeSecretary: ["Candidate Alpha", "Candidate Beta", "Candidate Gamma"],
+    president: ["Joshua Kamande", "Faith Blessing", "Brian James"],
+    vicePresident: ["John Kamau", "Mary Mbithe", "Allan Omondi"],
+    secretaryGeneral: ["Britney Moraa", "Henriette Namasaya", "Joshua Mumo"],
+    financeSecretary: ["Elvis Parmuat", "Shekinah Glory", "Peter Njoroge"],
   })
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
