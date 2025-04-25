@@ -1,22 +1,50 @@
 const express = require("express")
 const router = express.Router()
 const auth = require("../middleware/auth")
+// const checkVotingClosed = require("../middleware/results")
 const Vote = require("../models/Vote")
 const Voter = require("../models/Voter")
 const mongoose = require("mongoose")
 
-// Add this new endpoint for candidates
+// Add this route (protect with admin auth as needed)
+router.post("/admin/closeVoting", auth, async (req, res) => {
+  try {
+    await ElectionSettings.findOneAndUpdate(
+      {},
+      { isVotingClosed: true },
+      { upsert: true, new: true }
+    )
+    res.json({ message: "Voting closed successfully" })
+  } catch (err) {
+    res.status(500).json({ message: "Server error" })
+  }
+})
+// Middleware to check if voting is closed
+const checkVotingClosed = async (req, res, next) => {
+  try {
+    const settings = await ElectionSettings.findOne()
+    if (!settings || !settings.isVotingClosed) {
+      return res.status(403).json({ message: "Results are not available yet" })
+    }
+    next()
+  } catch (err) {
+    res.status(500).json({ message: "Server error" })
+  }
+}
+// GET /candidates
 router.get("/candidates", async (req, res) => {
   try {
-    // You can replace this with actual database queries if you have a candidates collection
-    const candidates = {
-      president: ["John Doe", "Jane Smith", "Michael Johnson"],
-      vicePresident: ["Sarah Williams", "Robert Brown", "Emily Davis"],
-      secretaryGeneral: ["David Wilson", "Jennifer Taylor", "Christopher Martinez"],
-      financeSecretary: ["Jessica Anderson", "Daniel Thomas", "Michelle Garcia"],
-    }
+    const allCandidates = await Candidate.find()
 
-    res.json(candidates)
+    // Organize by position
+    const grouped = allCandidates.reduce((acc, candidate) => {
+      const key = candidate.position
+      if (!acc[key]) acc[key] = []
+      acc[key].push(candidate.name)
+      return acc
+    }, {})
+
+    res.json(grouped)
   } catch (err) {
     console.error("Error fetching candidates:", err)
     res.status(500).json({ message: "Server error" })
@@ -29,6 +57,13 @@ router.post("/submitVote", auth, async (req, res) => {
   session.startTransaction()
 
   try {
+
+      // Check if voting is closed
+      const settings = await ElectionSettings.findOne()
+      if (settings?.isVotingClosed) {
+        await session.abortTransaction()
+        return res.status(403).json({ message: "Voting has ended" })
+      }
     const io = req.app.get("io")
     const voter = await Voter.findById(req.voter._id).session(session)
 
@@ -70,8 +105,8 @@ router.post("/submitVote", auth, async (req, res) => {
 
     await session.commitTransaction()
 
-    // Emit realtime update
-    if (io) {
+    // Emit realtime update only if voting is still open
+    if (io && !settings?.isVotingClosed) {
       io.emit("voteUpdate", await getVoteCounts())
     }
 
@@ -88,8 +123,8 @@ router.post("/submitVote", auth, async (req, res) => {
   }
 })
 
-// Get Results
-router.get("/voteResults", async (req, res) => {
+// GET /voteResults - Fixed route definition
+router.get("/voteResults", checkVotingClosed, async (req, res) => {
   try {
     const results = await getVoteCounts()
     res.json(results)

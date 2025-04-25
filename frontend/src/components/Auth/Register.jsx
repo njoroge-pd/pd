@@ -2,11 +2,9 @@
 
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import axios from "axios"
 import Header from "../Layout/Header"
 import MainContainer from "../Layout/MainContainer"
 import { authAPI } from "../../services/api"
-
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -24,10 +22,35 @@ const Register = () => {
   const navigate = useNavigate()
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    })
+    const { name, value } = e.target
+    let processedValue = value
+
+    switch (name) {
+      case 'admissionNumber':
+        // Allow only alphanumeric characters
+        processedValue = value.replace(/[^A-Za-z0-9]/g, '')
+        break
+      case 'name':
+      case 'course':
+        // Allow only letters, spaces, apostrophes, and hyphens
+        processedValue = value.replace(/[^A-Za-z\s'-]/g, '')
+        break
+      case 'phone':
+        // Allow only numbers and limit to 10 digits
+        processedValue = value.replace(/\D/g, '').slice(0, 10)
+        break
+      case 'email':
+        // Remove spaces and special characters except valid email symbols
+        processedValue = value.replace(/[^\w@.-]/g, '')
+        break
+      default:
+        break
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      [name]: processedValue,
+    }))
   }
 
   const handleSubmit = async (e) => {
@@ -36,18 +59,50 @@ const Register = () => {
     setError(null)
     setSuccess(null)
 
-    // Validate passwords match
-    if (formData.password !== formData.confirmPassword) {
+    // Trim all text fields except passwords
+    const trimmedData = {
+      ...formData,
+      admissionNumber: formData.admissionNumber.trim(),
+      name: formData.name.trim(),
+      email: formData.email.trim(),
+      course: formData.course.trim(),
+      phone: formData.phone.trim(),
+    }
+
+    // Final validation check
+    if (!/^[A-Za-z0-9]+$/.test(trimmedData.admissionNumber)) {
+      setError("Invalid admission number format")
+      setLoading(false)
+      return
+    }
+
+    if (!/^[A-Za-z\s'-]+$/.test(trimmedData.name)) {
+      setError("Invalid characters in name")
+      setLoading(false)
+      return
+    }
+
+    if (!/^[A-Za-z\s'-]+$/.test(trimmedData.course)) {
+      setError("Invalid characters in course name")
+      setLoading(false)
+      return
+    }
+
+    if (trimmedData.phone.length !== 10) {
+      setError("Phone number must be 10 digits")
+      setLoading(false)
+      return
+    }
+
+    if (trimmedData.password !== trimmedData.confirmPassword) {
       setError("Passwords do not match")
       setLoading(false)
       return
     }
 
     try {
-      const response = await authAPI.register(formData)
+      const response = await authAPI.register(trimmedData)
       setSuccess(response.data.message || "Registration successful")
-
-      // Redirect to login after a delay
       setTimeout(() => {
         navigate("/")
       }, 3000)
@@ -80,9 +135,12 @@ const Register = () => {
               name="admissionNumber"
               value={formData.admissionNumber}
               onChange={handleChange}
+              pattern="[A-Za-z0-9]+"
+              title="Admission number can only contain letters and numbers"
               required
               disabled={loading}
-              placeholder="Enter your admission number"
+              placeholder="Enter admission number"
+              maxLength="20"
             />
           </div>
 
@@ -94,9 +152,12 @@ const Register = () => {
               name="name"
               value={formData.name}
               onChange={handleChange}
+              pattern="[A-Za-z\s'-]+"
+              title="Name can only contain letters, spaces, apostrophes, and hyphens"
               required
               disabled={loading}
-              placeholder="Enter your full name"
+              placeholder="Enter full name"
+              maxLength="50"
             />
           </div>
 
@@ -108,9 +169,12 @@ const Register = () => {
               name="email"
               value={formData.email}
               onChange={handleChange}
+              pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+              title="Please enter a valid email address"
               required
               disabled={loading}
-              placeholder="Enter your email address"
+              placeholder="Enter email address"
+              maxLength="100"
             />
           </div>
 
@@ -122,9 +186,12 @@ const Register = () => {
               name="course"
               value={formData.course}
               onChange={handleChange}
+              pattern="[A-Za-z\s'-]+"
+              title="Course name can only contain letters, spaces, apostrophes, and hyphens"
               required
               disabled={loading}
-              placeholder="Enter your course"
+              placeholder="Enter course name"
+              maxLength="50"
             />
           </div>
 
@@ -136,9 +203,12 @@ const Register = () => {
               name="phone"
               value={formData.phone}
               onChange={handleChange}
+              pattern="[0-9]{10}"
+              title="Phone number must be exactly 10 digits"
               required
               disabled={loading}
-              placeholder="Enter your phone number"
+              placeholder="Enter 10-digit phone number"
+              inputMode="numeric"
             />
           </div>
 
@@ -152,7 +222,9 @@ const Register = () => {
               onChange={handleChange}
               required
               disabled={loading}
-              placeholder="Create a password"
+              placeholder="Create password"
+              minLength="8"
+              maxLength="30"
             />
           </div>
 
@@ -166,7 +238,9 @@ const Register = () => {
               onChange={handleChange}
               required
               disabled={loading}
-              placeholder="Confirm your password"
+              placeholder="Confirm password"
+              minLength="8"
+              maxLength="30"
             />
           </div>
 
