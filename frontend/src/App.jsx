@@ -84,7 +84,7 @@ function App() {
       </Routes>
 
       <footer className="app-footer">
-        <p>© 2024 MMU Voting System. All rights reserved.</p>
+        <p>© 2025 MMU Voting System. All rights reserved.</p>
       </footer>
     </div>
   )
