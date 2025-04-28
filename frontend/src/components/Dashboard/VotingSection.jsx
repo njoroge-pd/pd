@@ -32,28 +32,19 @@ const VotingSection = () => {
 
     const initializeData = async () => {
       try {
-        // Check if user has already voted
         const userResponse = await authAPI.getCurrentUser()
-        console.log("User data:", userResponse.data)
-
         if (userResponse.data.hasVoted) {
           setHasVoted(true)
-          setError("You have already voted. Redirecting to results...")
-          setTimeout(() => navigate("/results"), 3000)
           return
         }
 
-        // Fetch candidates - commented out for now since the endpoint might not exist
-        // Try to use hardcoded candidates if the API call fails
         try {
           const candidatesResponse = await voteAPI.getCandidates()
           setCandidates(candidatesResponse.data)
         } catch (err) {
-          console.warn("Could not fetch candidates, using defaults:", err)
-          // Using default candidates defined in state
+          console.warn("Using default candidates:", err)
         }
 
-        // Initialize socket connection
         const socketUrl = import.meta.env.VITE_API_URL || window.location.origin
         socket = io(socketUrl)
 
@@ -62,20 +53,18 @@ const VotingSection = () => {
         })
 
         socket.on("voteUpdate", (updatedVotes) => {
-          console.log("Received vote update:", updatedVotes)
+          console.log("Vote update:", updatedVotes)
         })
 
         socket.on("connect_error", (err) => {
-          console.error("Socket connection error:", err)
+          console.error("Socket error:", err)
         })
       } catch (err) {
-        console.error("Error initializing data:", err)
+        console.error("Initialization error:", err)
         if (err.response?.status === 401) {
           navigate("/")
-        } else if (err.response?.data?.message) {
-          setError(err.response.data.message)
         } else {
-          setError("Failed to load voting data. Please try again later.")
+          setError("Failed to load data. Try again later.")
         }
       } finally {
         setLoading(false)
@@ -84,11 +73,8 @@ const VotingSection = () => {
 
     initializeData()
 
-    // Cleanup function
     return () => {
-      if (socket) {
-        socket.disconnect()
-      }
+      if (socket) socket.disconnect()
     }
   }, [navigate])
 
@@ -97,10 +83,10 @@ const VotingSection = () => {
   }
 
   const validateVotes = () => {
-    const missingPositions = Object.keys(votes).filter((position) => !votes[position])
-    if (missingPositions.length > 0) {
-      const formattedPositions = missingPositions.map((pos) => pos.replace(/([A-Z])/g, " $1").trim()).join(", ")
-      setError(`Please select candidates for: ${formattedPositions}`)
+    const missing = Object.keys(votes).filter((p) => !votes[p])
+    if (missing.length > 0) {
+      const formatted = missing.map((p) => p.replace(/([A-Z])/g, " $1").trim()).join(", ")
+      setError(`Please select candidates for: ${formatted}`)
       return false
     }
     return true
@@ -108,11 +94,7 @@ const VotingSection = () => {
 
   const submitVote = async (e) => {
     e.preventDefault()
-
-    // Validate all positions are selected
-    if (!validateVotes()) {
-      return
-    }
+    if (!validateVotes()) return
 
     setSubmitting(true)
     setError(null)
@@ -120,21 +102,14 @@ const VotingSection = () => {
 
     try {
       await voteAPI.submitVote(votes)
-
       setSuccess("Vote submitted successfully!")
       setHasVoted(true)
-
-      // Redirect to results page after a delay
-      setTimeout(() => navigate("/results"), 3000)
     } catch (err) {
-      console.error("Error submitting vote:", err)
-
+      console.error("Submit error:", err)
       if (err.response?.data?.message === "Already voted") {
-        setError("You have already voted. Redirecting to results...")
         setHasVoted(true)
-        setTimeout(() => navigate("/results"), 3000)
       } else {
-        setError(err.response?.data?.message || "Error submitting vote. Please try again.")
+        setError(err.response?.data?.message || "Error submitting vote.")
       }
     } finally {
       setSubmitting(false)
@@ -160,11 +135,9 @@ const VotingSection = () => {
       <div className="dashboard">
         <Header />
         <MainContainer>
-          {error && <div className="alert alert-danger">{error}</div>}
-          {success && <div className="alert alert-success">{success}</div>}
-          <div className="redirect-message">
-            <h3>Thank you for voting!</h3>
-            <p>Redirecting to results page...</p>
+          <div className="thank-you-message">
+            <h3>Voted</h3>
+            <p>Your vote has been recorded successfully. Thank you for participating in the election.</p>
           </div>
         </MainContainer>
       </div>
@@ -177,20 +150,18 @@ const VotingSection = () => {
       <MainContainer>
         <div className="page-header">
           <h2>Cast Your Vote</h2>
-          <p className="voting-instructions">
-            Select one candidate for each position below. You must vote for all positions to submit your ballot.
-          </p>
+          <p>Select one candidate for each position. All fields are required.</p>
         </div>
 
         {error && <div className="alert alert-danger">{error}</div>}
         {success && <div className="alert alert-success">{success}</div>}
 
         <form onSubmit={submitVote}>
-          {Object.entries(candidates).map(([position, candidateList]) => (
+          {Object.entries(candidates).map(([position, list]) => (
             <div key={position} className="vote-section">
               <h3>{position.replace(/([A-Z])/g, " $1").trim()}</h3>
               <div className="candidates-grid">
-                {candidateList.map((candidate) => (
+                {list.map((candidate) => (
                   <label
                     key={candidate}
                     className={`candidate-option ${votes[position] === candidate ? "selected" : ""}`}
