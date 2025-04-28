@@ -9,16 +9,16 @@ import MainContainer from "../Layout/MainContainer"
 
 const VotingSection = () => {
   const [votes, setVotes] = useState({
-    president: "",
-    vicePresident: "",
-    secretaryGeneral: "",
-    financeSecretary: "",
+    President: "",
+    DeputyPresident: "",
+    SecretaryGeneral: "",
+    FinanceSecretary: "",
   })
   const [candidates, setCandidates] = useState({
-    president: ["Joshua Kamande", "Faith Blessing", "Brian James"],
-    vicePresident: ["John Kamau", "Mary Mbithe", "Allan Omondi"],
-    secretaryGeneral: ["Britney Moraa", "Henriette Namasaya", "Joshua Mumo"],
-    financeSecretary: ["Elvis Parmuat", "Shekinah Glory", "Peter Njoroge"],
+    President: ["Joshua Kamande", "Faith Blessing", "Brian James"],
+    DeputyPresident: ["John Kamau", "Mary Mbithe", "Allan Omondi"],
+    SecretaryGeneral: ["Britney Moraa", "Henriette Namasaya", "Joshua Mumo"],
+    FinanceSecretary: ["Elvis Parmuat", "Shekinah Glory", "Peter Njoroge"],
   })
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
